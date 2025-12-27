@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Know Your Ideal Customer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* [START: STYLES] */
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --bg-color: #f9fafb;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --highlight-color: #4f46e5;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #e5e7eb;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        #kyic-widget {
+            max-width: 800px;
+            width: 100%;
+            margin-top: 30px;
+            padding: 2rem;
+            background-color: var(--bg-color);
+            border-radius: var(--border-radius);
+            color: var(--text-color);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .widget-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .widget-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--highlight-color);
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .widget-description {
+            font-size: 1rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .url-input {
+            padding: 0.8rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--box-shadow);
+            width: 100%;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .share-btn {
+            background: linear-gradient(135deg, #10B981, #3B82F6);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results-container {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            margin-top: 1rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-list {
+            list-style-type: none;
+            counter-reset: item-counter;
+        }
+
+        .result-item {
+            margin-bottom: 1rem;
+            counter-increment: item-counter;
+            position: relative;
+            padding-left: 2.5rem;
+        }
+
+        .result-item::before {
+            content: counter(item-counter) ".";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: var(--highlight-color);
+        }
+
+        .result-title {
+            font-weight: 700;
+            color: var(--highlight-color);
+            display: inline;
+        }
+
+        .result-content {
+            color: var(--text-color);
+            line-height: 1.6;
+            display: inline;
+        }
+
+        .error-message {
+            color: #ef4444;
+            text-align: center;
+            margin-top: 1rem;
+            font-weight: 500;
+            display: none;
+        }
+
+        .share-container {
+            display: none;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            #kyic-widget {
+                padding: 1.5rem;
+                margin-top: 10px;
+            }
+            
+            .widget-title {
+                font-size: 1.5rem;
+            }
+            
+            .results-container {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #kyic-widget {
+                padding: 1rem;
+            }
+            
+            .widget-title {
+                font-size: 1.3rem;
+            }
+            
+            .results-container {
+                padding: 1rem;
+            }
+            
+            .result-item {
+                padding-left: 2rem;
+                font-size: 0.95rem;
+            }
+            .analyze-btn, .share-btn {
+                padding: 0.7rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        /* [END: STYLES] */
+    </style>
+
+    <div id="kyic-widget">
+        <div class="widget-header">
+            <h1 class="widget-title">Know Your Ideal Customer</h1>
+            <p class="widget-description">Enter a website URL to discover the perfect customer profile</p>
+        </div>
+
+        <div class="input-container">
+            <input type="url" class="url-input" id="urlInput" placeholder="Enter website URL (e.g., https://example.com)" required>
+            <button class="analyze-btn" id="analyzeBtn">
+                <span>Show Me The Ideal Buyer</span>
+            </button>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="results-container" id="resultsContainer">
+            <ol class="result-list" id="resultList">
+                </ol>
+            <div class="share-container" id="shareContainer">
+                <button class="share-btn" id="shareBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5z"/>
+                    </svg>
+                    Share Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 💡 IMPORTANT: Replace this placeholder with your deployed Google Apps Script Web App URL
+            const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzIyUfAsDRkdVr7A6ILQBynuTcVb5nDqr1sx1wnFnjrCGdSiMtMmeqiBDqgjX0HD89O/exec'; 
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const urlInput = document.getElementById('urlInput');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultList = document.getElementById('resultList');
+            const shareContainer = document.getElementById('shareContainer');
+            const shareBtn = document.getElementById('shareBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            const btnText = analyzeBtn.querySelector('span');
+            
+            analyzeBtn.addEventListener('click', analyzeWebsite);
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') analyzeWebsite();
+            });
+            
+            shareBtn.addEventListener('click', shareResults);
+            
+            function analyzeWebsite() {
+                const url = urlInput.value.trim();
+                
+                if (GAS_WEB_APP_URL.includes('PASTE_YOUR_DEPLOYED_WEB_APP_URL_HERE')) {
+                    showError('Configuration Error: Please update the GAS_WEB_APP_URL in the script.');
+                    return;
+                }
+
+                if (!url) {
+                    showError('Please enter a website URL');
+                    return;
+                }
+                
+                // Validate URL format
+                try {
+                    new URL(url);
+                } catch (e) {
+                    showError('Please enter a valid URL including http:// or https://');
+                    return;
+                }
+                
+                // Start analysis
+                setLoading(true);
+                resultsContainer.style.display = 'none';
+                shareContainer.style.display = 'none';
+                errorMessage.style.display = 'none';
+                resultList.innerHTML = '';
+                
+                // Call API via Apps Script Proxy
+                fetchCustomerProfile(url);
+            }
+            
+            function setLoading(isLoading) {
+                if (isLoading) {
+                    analyzeBtn.disabled = true;
+                    btnText.textContent = 'Analyzing...';
+                    analyzeBtn.insertAdjacentHTML('afterbegin', '<span class="loading-spinner"></span>');
+                } else {
+                    analyzeBtn.disabled = false;
+                    const spinner = analyzeBtn.querySelector('.loading-spinner');
+                    if (spinner) spinner.remove();
+                    btnText.textContent = 'Show Me The Ideal Buyer';
+                }
+            }
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.animation = 'fadeIn 0.3s ease-out';
+                }, 10);
+            }
+            
+            function fetchCustomerProfile(url) {
+                // 🔑 Key removed and logic changed to use FormData for CORS fix
+                const formData = new FormData();
+                formData.append('url', url); // Send data as Form Data
+
+                fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    body: formData, // Send FormData object
+                    // Do NOT set 'Content-Type': 'application/json' here. The browser handles the Content-Type for FormData.
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.content) {
+                        displayResults(data.content);
+                    } else if (data.error) {
+                        showError(data.error);
+                    } else {
+                        throw new Error('Invalid response format from Apps Script.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showError('Network or Backend Error: Could not connect to the analysis service.');
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+            }
+            
+            function displayResults(content) {
+                // Clear previous results
+                resultList.innerHTML = '';
+                
+                // Split the content into lines and filter out empty lines
+                const lines = content.split('\n').filter(line => line.trim());
+                
+                // Process each line
+                lines.forEach(line => {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine) return;
+                    
+                    // The line should look like: 1. **Demographics**: Information here...
+                    
+                    // Create list item
+                    const listItem = document.createElement('li');
+                    listItem.className = 'result-item';
+                    
+                    // Regex to split at the bolded title and the colon
+                    const match = trimmedLine.match(/^(\d+\.\s*\*\*(.*?)\*\*):(.*)$/);
+
+                    if (match) {
+                        const title = match[2].trim(); // e.g., "Demographics"
+                        const resultContent = match[3].trim(); // e.g., "Information here..."
+                        
+                        listItem.innerHTML = `
+                            <span class="result-title">${title}:</span>
+                            <span class="result-content"> ${resultContent}</span>
+                        `;
+                    } else {
+                        // Fallback if formatting is unexpected
+                        listItem.innerHTML = `<span class="result-content">${trimmedLine}</span>`;
+                    }
+                    
+                    resultList.appendChild(listItem);
+                });
+                
+                // Show results and share button
+                resultsContainer.style.display = 'block';
+                shareContainer.style.display = 'block';
+                setTimeout(() => {
+                    resultsContainer.style.animation = 'fadeIn 0.5s ease-out';
+                }, 10);
+            }
+            
+            function shareResults() {
+                // Get all the results text
+                const resultItems = document.querySelectorAll('.result-item');
+                let shareText = 'I discovered the ideal customer profile for a website!\n\n';
+                
+                resultItems.forEach(item => {
+                    // Extract the text content, including the number from the ::before pseudo-element
+                    const number = item.getAttribute('data-item-number') || '';
+                    shareText += `${number}${item.textContent}\n`;
+                });
+                
+                shareText += '\nTry it yourself with the Know Your Ideal Customer widget!';
+                
+                // Try to use the Web Share API if available
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Ideal Customer Profile',
+                        text: shareText,
+                        url: window.location.href
+                    }).catch(err => {
+                        console.log('Error sharing:', err);
+                        fallbackShare(shareText);
+                    });
+                } else {
+                    fallbackShare(shareText);
+                }
+            }
+            
+            function fallbackShare(text) {
+                // Create a temporary textarea to copy from
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed'; 
+                textarea.style.left = '-9999px'; // Hide it visually
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        alert('Results copied to clipboard! You can now paste them anywhere.');
+                    } else {
+                        throw new Error('Copy command failed');
+                    }
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                    alert('Share these results:\n\n' + text);
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
